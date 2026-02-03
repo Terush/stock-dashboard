@@ -1,0 +1,47 @@
+name: Update Stock Dashboard
+
+on:
+  # 毎日日本時間の17:00（UTC 8:00）に実行 - 日本株式市場終了後
+  schedule:
+    - cron: '0 8 * * 1-5'  # 平日のみ
+
+  # 手動実行も可能
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install yfinance pandas numpy
+
+      - name: Generate dashboard
+        env:
+          DASHBOARD_PASSWORD: ${{ secrets.DASHBOARD_PASSWORD }}
+        run: |
+          if [ -n "$DASHBOARD_PASSWORD" ]; then
+            python generate_site.py --password "$DASHBOARD_PASSWORD" --output index.html
+          else
+            python generate_site.py --output index.html
+          fi
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add index.html
+          git diff --staged --quiet || git commit -m "Update dashboard: $(date +'%Y-%m-%d %H:%M')"
+          git push
+
+permissions:
+  contents: write

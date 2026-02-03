@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        :root {
+            --bg: #000;
+            --bg-card: #111;
+            --border: #222;
+            --text: #fff;
+            --text-sub: #777;
+            --text-muted: #444;
+            --red: #e54;
+            --orange: #f90;
+            --green: #3c8;
+            --blue: #48f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        .title {
+            font-size: 1rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            color: var(--text-sub);
+        }
+        .meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Alert */
+        .alert {
+            background: rgba(238, 85, 68, 0.08);
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 32px;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+        }
+        .alert strong {
+            color: var(--red);
+        }
+
+        /* Stats */
+        .stats {
+            display: flex;
+            gap: 32px;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        .stat {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+        .stat-num {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        /* Card */
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 3px solid var(--border);
+        }
+        .card.green { border-left-color: var(--green); }
+        .card.blue { border-left-color: var(--blue); }
+        .card.orange { border-left-color: var(--orange); }
+        .card.red { border-left-color: var(--red); }
+
+        .card-head {
+            margin-bottom: 16px;
+        }
+        .card-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .card-code {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .card-price {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .price {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .change {
+            font-size: 0.8rem;
+        }
+        .change.up { color: var(--green); }
+        .change.down { color: var(--red); }
+
+        .card-score {
+            margin-bottom: 12px;
+        }
+        .score-bar {
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+        .score-fill {
+            height: 100%;
+            border-radius: 2px;
+        }
+        .score-text {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .card-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        .badge {
+            font-size: 0.65rem;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 100px;
+        }
+        .badge.green { background: rgba(51, 204, 136, 0.15); color: var(--green); }
+        .badge.blue { background: rgba(68, 136, 255, 0.15); color: var(--blue); }
+        .badge.orange { background: rgba(255, 153, 0, 0.15); color: var(--orange); }
+        .badge.red { background: rgba(238, 85, 68, 0.15); color: var(--red); }
+
+        .action {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+        .action strong {
+            color: var(--text-sub);
+        }
+        .action strong.sell {
+            color: var(--red);
+        }
+
+        /* Login */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .login-box {
+            width: 280px;
+            text-align: center;
+        }
+        .login-box h2 {
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            color: var(--text-sub);
+            margin-bottom: 32px;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-card);
+            color: var(--text);
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+        .login-box input:focus {
+            outline: none;
+            border-color: var(--text-muted);
+        }
+        .login-box button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: var(--text);
+            color: var(--bg);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .login-box .hint {
+            margin-top: 24px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+        .login-box .error {
+            color: var(--red);
+            font-size: 0.8rem;
+            margin-top: 12px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+            .stats { flex-wrap: wrap; gap: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-box">
+            <h2>PORTFOLIO</h2>
+            <form id="login-form">
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit">Enter</button>
+            </form>
+            <p id="error-msg" class="error"></p>
+            <p class="hint">demo123</p>
+        </div>
+    </div>
+
+    <div id="content" style="display: none;">
+        <div class="container">
+            <header>
+                <div class="title">PORTFOLIO</div>
+                <div class="meta">2026.02.04 17:00 / SAMPLE</div>
+            </header>
+
+            <div class="alert">
+                <strong>9999.T サンプル銘柄</strong> — 下降トレンド、売却シグナル
+            </div>
+
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-num" style="color: var(--green)">4</span>
+                    <span class="stat-label">強い</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-num" style="color: var(--blue)">2</span>
+                    <span class="stat-label">弱い</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-num" style="color: var(--orange)">2</span>
+                    <span class="stat-label">横ばい</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-num" style="color: var(--red)">1</span>
+                    <span class="stat-label">下降</span>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="card green">
+                    <div class="card-head">
+                        <div class="card-name">三菱重工業</div>
+                        <div class="card-code">7011.T / 防衛</div>
+                    </div>
+                    <div class="card-price">
+                        <span class="price">¥2,450</span>
+                        <span class="change up">+1.25%</span>
+                    </div>
+                    <div class="card-score">
+                        <div class="score-bar"><div class="score-fill" style="width:82%; background:var(--green)"></div></div>
+                        <div class="score-text"><span>スコア</span><span>82</span></div>
+                    </div>
+                    <div class="card-status">
+                        <span class="badge green">強いトレンド</span>
+                        <span class="action"><strong>保有継続</strong></span>
+                    </div>
+                </div>
+
+                <div class="card green">
+                    <div class="card-head">
+                        <div class="card-name">IHI</div>
+                        <div class="card-code">7013.T / 防衛</div>
+                    </div>
+                    <div class="card-price">
+                        <span class="price">¥9,820</span>
+                        <span class="change up">+0.82%</span>
+                    </div>
+                    <div class="card-score">
+                        <div class="score-bar"><div class="score-fill" style="width:78%; background:var(--green)"></div></div>
+                        <div class="score-text"><span>スコア</span><span>78</span></div>
+                    </div>
+                    <div class="card-status">
+                        <span class="badge green">強いトレンド</span>
+                        <span class="action"><strong>保有継続</strong></span>
+                    </div>
+                </div>
+
+                <div class="card green">
+                    <div class="card-head">
+                        <div class="card-name">川崎重工業</div>
+                        <div class="card-code">7012.T / 防衛</div>
+                    </div>
+                    <div class="card-price">
+                        <span class="price">¥6,890</span>
+                        <span class="change up">+2.10%</span>
+                    </div>
+                    <div class="card-score">
+                        <div class="score-bar"><div class="score-fill" style="width:85%; background:var(--green)"></div></div>
+                        <div class="score-text"><span>スコア</span><span>85</span></div>
+                    </div>
+                    <div class="card-status">
+                        <span class="badge green">強いトレンド</span>
+                        <span class="action"><strong>保有継続</strong></span>
+                    </div>
+                </div>
+
+                <div class="card green">
+                    <div class="card-head">
+                        <div class="card-name">日立製作所</div>
+                        <div class="card-code">6501.T / 電機</div>
+                    </div>
+                    <div class="card-price">
+                        <span class="price">¥4,120</span>
+                        <span class="change up">+0.92%</span>
+                    </div>
+                    <div class="card-score">
+                        <div class="score-bar"><div class="score-fill" style="width:76%; background:var(--green)"></div></div>
+                        <div class="score-text"><span>スコア</span><span>76</span></div>
+                    </div>
+                    <div class="card-status">
+                        <span class="badge green">強いトレンド</span>
+                        <span class="action"><strong>保有継続</strong></span>
+                    </div>
+                </div>
+
+                <div class="card blue">
+                    <div class="card-head">
+                        <div class="card-name">第一生命</div>
+                        <div class="card-code">8750.T / 金融</div>
+                    </div>
+                    <div class="card-price">
+                        <span class="price">¥3,580</span>
+                        <span class="change up">+0.45%</span>
+                    </div>
+                    <div class="card-score">
+                        <div class="score-bar"><div class="score-fill" style="width:58%; background:var(--blue)"></div></div>
+                        <div class="score-text"><span>スコア</span><span>58</span></div>
+                    </div>
+                    <div class="card-status">
+                        <span class="badge blue">弱いトレンド</span>
+                        <span class="action"><strong>様子見</strong></span>
+                    </div>
+                </div>
+
+                <div class="card blue">
+                    <div class="card-head">
+                        <div class="card-name">三井住友FG</div>
+                        <div class="card-code">8316.T / 金融</div>
+                    </div>
+                    <div class="card-price">
+                        <span class="price">¥9,250</span>
+                        <span class="change up">+0.65%</span>
+                    </div>
+                    <div class="card-score">
+                        <div class="score-bar"><div class="score-fill" style="width:52%; background:var(--blue)"></div></div>
+                        <div class="score-text"><span>スコア</span><span>52</span></div>
+                    </div>
+                    <div class="card-status">
+                        <span class="badge blue">弱いトレンド</span>
+                        <span class="action"><strong>様子見</strong></span>
+                    </div>
+                </div>
+
+                <div class="card orange">
+                    <div class="card-head">
+                        <div class="card-name">三菱UFJ</div>
+                        <div class="card-code">8306.T / 金融</div>
+                    </div>
+                    <div class="card-price">
+                        <span class="price">¥1,680</span>
+                        <span class="change down">-0.35%</span>
+                    </div>
+                    <div class="card-score">
+                        <div class="score-bar"><div class="score-fill" style="width:42%; background:var(--orange)"></div></div>
+                        <div class="score-text"><span>スコア</span><span>42</span></div>
+                    </div>
+                    <div class="card-status">
+                        <span class="badge orange">横ばい</span>
+                        <span class="action"><strong class="sell">売却検討</strong></span>
+                    </div>
+                </div>
+
+                <div class="card orange">
+                    <div class="card-head">
+                        <div class="card-name">東京エレクトロン</div>
+                        <div class="card-code">8035.T / 半導体</div>
+                    </div>
+                    <div class="card-price">
+                        <span class="price">¥23,450</span>
+                        <span class="change down">-1.20%</span>
+                    </div>
+                    <div class="card-score">
+                        <div class="score-bar"><div class="score-fill" style="width:38%; background:var(--orange)"></div></div>
+                        <div class="score-text"><span>スコア</span><span>38</span></div>
+                    </div>
+                    <div class="card-status">
+                        <span class="badge orange">横ばい</span>
+                        <span class="action"><strong class="sell">売却検討</strong></span>
+                    </div>
+                </div>
+
+                <div class="card red">
+                    <div class="card-head">
+                        <div class="card-name">サンプル銘柄</div>
+                        <div class="card-code">9999.T / 例</div>
+                    </div>
+                    <div class="card-price">
+                        <span class="price">¥1,234</span>
+                        <span class="change down">-3.50%</span>
+                    </div>
+                    <div class="card-score">
+                        <div class="score-bar"><div class="score-fill" style="width:18%; background:var(--red)"></div></div>
+                        <div class="score-text"><span>スコア</span><span>18</span></div>
+                    </div>
+                    <div class="card-status">
+                        <span class="badge red">下降トレンド</span>
+                        <span class="action"><strong class="sell">売却</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const H = 'd3ad9315b7be5dd53b31a273b3b3aba5defe700808305aa16a3062b76658a791';
+        if (sessionStorage.getItem('auth') === H) {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+            return;
+        }
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const hash = CryptoJS.SHA256(document.getElementById('password').value).toString();
+            if (hash === H) {
+                sessionStorage.setItem('auth', H);
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+            } else {
+                document.getElementById('error-msg').textContent = 'パスワードが違います';
+            }
+        });
+    })();
+    </script>
+</body>
+</html>
