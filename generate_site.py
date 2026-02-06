@@ -25,6 +25,7 @@ WATCHLIST = [
     {"symbol": "8306.T", "name": "三菱UFJ", "sector": "金融"},
     {"symbol": "8750.T", "name": "第一生命", "sector": "金融"},
     {"symbol": "6701.T", "name": "NEC", "sector": "電機"},
+    {"symbol": "2768.T", "name": "双日", "sector": "商社"},
 ]
 
 
